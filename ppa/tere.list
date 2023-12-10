@@ -1,0 +1,1 @@
+deb [signed-by=/etc/apt/trusted.gpg.d/tere.gpg] https://bauerei.github.io/tere ./
