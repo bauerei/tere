@@ -1,0 +1,15 @@
+Package: tere
+Version: 1.5.1
+Architecture: amd64
+Maintainer: Konstantin Bauer <debian@bauerei.dev>
+Installed-Size: 2662
+Filename: ./tere_1.5.1_amd64.deb
+Size: 818376
+MD5sum: e74a9d1882e2efbb039058476b022632
+SHA1: 43265fb0c5448186326d6e5a1395560239886121
+SHA256: 28b5c40610185515b14cbb30995904738b318d1cd118a9d7ccf41b76edaca85e
+Priority: optional
+Description: Terminal file explorer
+Vcs-Browser: https://github.com/mgunyho/tere/
+Vcs-Git: https://github.com/mgunyho/tere/
+
