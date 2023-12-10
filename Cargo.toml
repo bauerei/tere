@@ -34,3 +34,6 @@ rexpect = "0.5"
 [profile.release]
 lto = true
 strip = "debuginfo"
+
+[package.metadata.deb]
+maintainer = "Konstantin Bauer <debian@bauerei.dev>"
