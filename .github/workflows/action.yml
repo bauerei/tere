@@ -1,0 +1,99 @@
+name: Publish tere Debian package
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  build_artifact_name: tere-deb
+  changelog_artifact_name: changelog
+  changelog_extracted_name: CHANGELOG-extracted.txt
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: sassman/rust-deb-builder@v1
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.build_artifact_name }}
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-musl/debian/tere_*_amd64.deb
+  create-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - id: extract-changelog
+        uses: sean0x42/markdown-extract@v2
+        with:
+         file: CHANGELOG-debian.md
+         pattern: '${{ github.ref_name }}' # Extract section in CHANGELOG-debian.md which is equal to the git tag triggering the action
+      - name: Write output to file
+        run: |
+          printf '${{ steps.extract-changelog.outputs.markdown }}' > ${{ env.changelog_extracted_name }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.changelog_artifact_name }}
+          path: ${{ env.changelog_extracted_name }}
+  create-gh-release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-deb
+      - create-changelog
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: ${{ github.workspace }}
+      - uses: softprops/action-gh-release@v0.1.15
+        with:
+          files: ${{ github.workspace }}/${{ env.build_artifact_name }}/tere_*_amd64.deb
+          body_path: ${{ github.workspace }}/${{ env.changelog_artifact_name }}/${{ env.changelog_extracted_name }}
+  update-ppa:
+    runs-on: ubuntu-latest
+    needs: create-gh-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.build_artifact_name }}
+          path: ${{ github.workspace }}/ppa
+      - uses: ./.github/actions/publish-package
+        with:
+          gpg-signing-key: ${{ secrets.GPG_SIGNING_KEY }}
+          gpg-key-pass: ${{ secrets.GPG_KEY_PASS }}
+          gpg-key-id: ${{ secrets.GPG_KEY_ID }}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Publish ${{ github.ref_name }} to PPA
+          branch: master
+          file_pattern: 'ppa/*.deb ppa/InRelease ppa/Packages ppa/Packages.gz ppa/Release ppa/Release.gpg'
+  publish-ppa: # Use Github pages to publish the contents of ppa folder
+    runs-on: ubuntu-latest
+    needs: update-ppa
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: 'master'
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'ppa'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
+    

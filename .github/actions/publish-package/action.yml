@@ -1,0 +1,16 @@
+name: Publish package
+description: 'Updates ppa for new version of .deb file'
+inputs:
+  gpg-signing-key:
+    description: 'base64 encoded export of private key'
+  gpg-key-pass:
+    description: 'passphrase of private key'
+  gpg-key-id:
+    description: 'id of private key'
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.gpg-signing-key }}
+    - ${{ inputs.gpg-key-pass }}
+    - ${{ inputs.gpg-key-id }}
