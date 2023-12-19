@@ -1,1 +1,1 @@
-deb [signed-by=/etc/apt/trusted.gpg.d/tere.gpg] https://bauerei.github.io/tere ./
+deb [signed-by=/etc/apt/keyrings/tere-archive-keyring.pgp] https://bauerei.github.io/tere ./
